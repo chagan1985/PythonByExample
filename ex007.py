@@ -1,0 +1,9 @@
+#####
+# Python By Example
+# Exercise 007
+# Christopher Hagan
+#####
+
+name = input('What is your name? ')
+age = int(input('And what is your age? '))
+print('{} next birthday you will be {}'.format(name, age + 1))
