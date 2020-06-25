@@ -20,3 +20,7 @@ for i in range(0, randomLines):
         turtle.left(int(360 / randomShape))
 
 turtle.exitonclick()
+
+
+# This one just wasn't explained very well, my code works but differs from 
+# the answer in the book, don't see a good reason to update my code #badRequirements
