@@ -10,8 +10,10 @@ def addToList():
     newName = nameEntry.get()
     listOfNames.insert(listOfNames.size()+1, newName)
 
+
 def clearList():
     listOfNames.delete(0, listOfNames.size())
+
 
 window = Tk()
 window.geometry('500x500')
