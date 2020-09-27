@@ -29,10 +29,10 @@ def newPasswordRating():
             rating += 1
 
         for char in newPassword:
-            if not(atLeastOneCaptial) and (char in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'):
+            if not(atLeastOneCaptial) and (char.isupper()):
                 rating += 1
                 atLeastOneCaptial = True
-            if not(atLeastOneLower) and (char in 'abcdefghijklmnopqrstuvwxyz'):
+            if not(atLeastOneLower) and (char.islower()):
                 rating += 1
                 atLeastOneLower = True
             if not(atLeastOneNumber) and (char in '0123456789'):
