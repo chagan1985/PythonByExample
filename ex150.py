@@ -13,6 +13,21 @@ import os, sqlite3, tkinter.messagebox, csv
 soldArtworkFile='soldArtwork.csv'
 soldArtworkColumnHeaders = ['PieceID', 'Artist', 'Title', 'Medium', 'Price']
 
+def clearNewArtistFields():
+    nameEntry.delete(0, 'end')
+    addressEntry.delete(0, 'end')
+    townEntry.delete(0, 'end')
+    countyEntry.delete(0, 'end')
+    postcodeEntry.delete(0, 'end')
+
+
+def clearNewArtworkFields():
+    titleEntry.delete(0, 'end')
+    mediumEntry.delete(0, 'end')
+    priceEntry.delete(0, 'end')
+    artistCombobox.set('')
+
+
 def displayArtist(artistKey):
     artistListBox.delete(0, 'end')
     if (artistKey == 0):
@@ -30,17 +45,19 @@ def displayArtist(artistKey):
 
 
 def displayArtwork():
+    for i in artworkFrame.get_children():
+        artworkFrame.delete(i)
     contentsOfPiecesOfArt = cursor.execute("""SELECT PieceID, Title, Medium, Price FROM PiecesOfArt""")
     for pieceOfArt in contentsOfPiecesOfArt:
         print(pieceOfArt[0])
-        newArtworkFrame.insert('', 'end', text=pieceOfArt[0], values=(pieceOfArt[1], pieceOfArt[2], pieceOfArt[3]))
+        artworkFrame.insert('', 'end', text=pieceOfArt[0], values=(pieceOfArt[1], pieceOfArt[2], pieceOfArt[3]))
 
 
 def newArtworkSelected(selection):
     print(selection)
-    newArtworkFrame.selection_remove(selection)
+    artworkFrame.selection_remove(selection)
     if (selection):
-        selectedArtist = cursor.execute("""SELECT ArtistID FROM PiecesOfArt WHERE PieceID={}""".format(newArtworkFrame.item(newArtworkFrame.selection())['text']))
+        selectedArtist = cursor.execute("""SELECT ArtistID FROM PiecesOfArt WHERE PieceID={}""".format(artworkFrame.item(artworkFrame.selection())['text']))
         selectedArtistKey = selectedArtist.fetchone()[0]
     else:
         selectedArtistKey = 0
@@ -53,20 +70,24 @@ def addArtist():
         cursor.execute("""INSERT INTO Artists(Name, Address, Town, County, Postcode)
                     VALUES('{}', '{}', '{}', '{}', '{}')""".format(nameEntry.get(), addressEntry.get(), townEntry.get(), countyEntry.get(), postcodeEntry.get()))
         db.commit()
-        nameEntry.delete(0, 'end')
-        addressEntry.delete(0, 'end')
-        townEntry.delete(0, 'end')
-        countyEntry.delete(0, 'end')
-        postcodeEntry.delete(0, 'end')
+        artistCombobox.config(values=cursor.execute("""SELECT ArtistID FROM Artists;""").fetchall())
+        clearNewArtistFields()
     else:
-        tkinter.messagebox.showerror('Data Error', 'Incomplete entry!')
+        tkinter.messagebox.showerror('Data Error', 'Incomplete Artist entry!')
 
 def addPieceOfArt():
-    print('Add piece of art....')
-
+    if (titleEntry.get() and mediumEntry.get() and priceEntry.get() and artistCombobox.get()):
+        cursor.execute("""INSERT INTO PiecesOfArt(ArtistID, Title, Medium, Price)
+                    VALUES('{}', '{}', '{}', '{}')""".format(int(artistCombobox.get()), titleEntry.get(), mediumEntry.get(), int(priceEntry.get())))
+        db.commit()
+        displayArtwork()
+        clearNewArtworkFields()
+    else:
+        tkinter.messagebox.showerror('Data Error', 'Incomplete Artwork entry!')
+        
 
 def pieceOfArtSold():
-    focusedItem = newArtworkFrame.item(newArtworkFrame.focus())
+    focusedItem = artworkFrame.item(artworkFrame.focus())
     artworkToBeRemoved = cursor.execute("""SELECT PieceID, ArtistID, Title, Medium, Price FROM PiecesOfArt WHERE PieceID={}""".format(focusedItem['text']))
     pieceID, artistID, title, medium, price = artworkToBeRemoved.fetchone()
     artist = cursor.execute("""SELECT Name FROM Artists WHERE ArtistID={}""".format(artistID)).fetchone()[0]
@@ -136,15 +157,15 @@ addArtistButton.place(x=740, y=215, width=75, height=50)
 artworkFrame = LabelFrame(text='Artwork')
 artworkFrame.place(x=50, y=375, width=800, height=600)
 
-newArtworkFrame = ttk.Treeview(show='headings', column=('Title', 'Medium', 'Price'), selectmode='browse')
-newArtworkFrame.column('Title', width=300, anchor='w')
-newArtworkFrame.heading('Title', text='Title')
-newArtworkFrame.column('Medium', width=150, anchor='center')
-newArtworkFrame.heading('Medium', text='Medium')
-newArtworkFrame.column('Price', width=150, anchor='e')
-newArtworkFrame.heading('Price', text='Price (£)')
-newArtworkFrame.bind('<<TreeviewSelect>>', newArtworkSelected)
-newArtworkFrame.place(x=75, y=400, width=600, height=400)
+artworkFrame = ttk.Treeview(show='headings', column=('Title', 'Medium', 'Price'), selectmode='browse')
+artworkFrame.column('Title', width=300, anchor='w')
+artworkFrame.heading('Title', text='Title')
+artworkFrame.column('Medium', width=150, anchor='center')
+artworkFrame.heading('Medium', text='Medium')
+artworkFrame.column('Price', width=150, anchor='e')
+artworkFrame.heading('Price', text='Price (£)')
+artworkFrame.bind('<<TreeviewSelect>>', newArtworkSelected)
+artworkFrame.place(x=75, y=400, width=600, height=400)
 displayArtwork()
 
 sellArtworkButton = Button(text='Mark Artwork\n   as sold', command=pieceOfArtSold)
